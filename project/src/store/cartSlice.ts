@@ -1,41 +1,15 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { CartItem } from '../types'
 
-const STORAGE_KEY = 'ra16-cart'
-
-const loadCart = (): CartItem[] => {
-  if (typeof window === 'undefined') {
-    return []
-  }
-
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (!stored) {
-      return []
-    }
-    return JSON.parse(stored) as CartItem[]
-  } catch {
-    return []
-  }
-}
-
-const saveCart = (items: CartItem[]) => {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-}
-
-const initialState = {
-  items: loadCart(),
+export const initialCartState = {
+  items: [] as CartItem[],
   orderStatus: 'idle' as 'idle' | 'loading' | 'success' | 'error',
   orderError: null as string | null,
 }
 
 const cartSlice = createSlice({
   name: 'cart',
-  initialState,
+  initialState: initialCartState,
   reducers: {
     addToCart(
       state,
@@ -66,15 +40,12 @@ const cartSlice = createSlice({
           sku,
         })
       }
-      saveCart(state.items)
     },
     removeFromCart(state, action: PayloadAction<{ id: number; size: string }>) {
       state.items = state.items.filter(item => item.id !== action.payload.id || item.size !== action.payload.size)
-      saveCart(state.items)
     },
     clearCart(state) {
       state.items = []
-      saveCart(state.items)
     },
     placeOrderRequest(
       state,
@@ -88,7 +59,6 @@ const cartSlice = createSlice({
       state.orderStatus = 'success'
       state.orderError = null
       state.items = []
-      saveCart(state.items)
     },
     placeOrderFailure(state, action: PayloadAction<string>) {
       state.orderStatus = 'error'
